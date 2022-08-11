@@ -1,5 +1,4 @@
-ARG RUST_VERSION
-FROM rust:${RUST_VERSION}
+FROM rust:1.62.1
 
 # Setup Intel-MKL
 WORKDIR /mkl
