@@ -1,0 +1,45 @@
+name: pack
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      # tag must be rust_version-mkl_version
+      - "*.*.*-*.*"
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  linux:
+    runs-on: ubuntu-22.04
+    container:
+      image: ghcr.io/rust-math/rust-mkl:1.62.1-2020.1
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Login to GitHub Container Registry
+        if: github.event_name != 'pull_request'
+        run: |
+          ocipkg login -u ${{ github.repository_owner }} -p ${{ github.token }} https://ghcr.io
+
+      - uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: ocipkg-cli --version=0.2.3
+      - name: Add path
+        run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Create oci-archive using intel-mkl-pack
+        uses: actions-rs/cargo@v1
+        with:
+          command: run
+          args: --release
+
+      - name: Push oci-archives
+        if: github.event_name != 'pull_request'
+        run: >-
+          for ar in $(find . -name "mkl-*-*-*.tar"); do
+            ocipkg push $ar;
+          done
