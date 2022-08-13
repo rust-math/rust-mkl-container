@@ -15,7 +15,7 @@ jobs:
   linux:
     runs-on: ubuntu-22.04
     container:
-      image: ghcr.io/rust-math/rust-mkl:1.62.1-2020.1
+      image: rust:1.62.1
     steps:
       - uses: actions/checkout@v1
 
