@@ -8,12 +8,8 @@ RUN apt update \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
-COPY silent.cfg /mkl/
-RUN curl -sfLO http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16533/l_mkl_2020.1.217.tgz \
- && tar xf l_mkl_2020.1.217.tgz   \
- && cd l_mkl_2020.1.217           \
- && ./install.sh -s ../silent.cfg \
- && rm -rf /mkl
+COPY install-mkl.sh silent.cfg /mkl/
+RUN /mkl/install-mkl.sh
 
 # Setup linker to find shared library
 COPY intel-mkl.conf /etc/ld.so.conf.d/
