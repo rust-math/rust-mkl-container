@@ -19,17 +19,26 @@ jobs:
     steps:
       - uses: actions/checkout@v1
 
-      - name: Login to GitHub Container Registry
-        if: github.event_name != 'pull_request'
-        run: |
-          ocipkg login -u ${{ github.repository_owner }} -p ${{ github.token }} https://ghcr.io
-
       - uses: actions-rs/cargo@v1
         with:
           command: install
           args: ocipkg-cli --version=0.2.3
       - name: Add path
         run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Login to GitHub Container Registry
+        if: github.event_name != 'pull_request'
+        run: |
+          ocipkg login -u ${{ github.repository_owner }} -p ${{ github.token }} https://ghcr.io
+
+      - name: Install Intel MKL
+        run: |
+          apt update
+          apt install -y cpio
+          curl -sfLO http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16533/l_mkl_2020.1.217.tgz
+          tar xf l_mkl_2020.1.217.tgz
+          cd l_mkl_2020.1.217
+          ./install.sh -s ../silent.cfg
 
       - name: Create oci-archive using intel-mkl-pack
         uses: actions-rs/cargo@v1
