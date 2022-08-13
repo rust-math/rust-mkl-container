@@ -6,6 +6,6 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.60"
 oci-spec = "0.5.7"
-ocipkg = "0.1.2"
+ocipkg = "0.2.3"
 colored = "2.0.0"
 intel-mkl-tool = "0.4.0"
