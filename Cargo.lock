@@ -28,9 +28,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.61"
+version = "1.0.64"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "508b352bb5c066aac251f6daf6b36eccd03e8a88e8081cd44959ea277a3af9a8"
+checksum = "b9a8f622bcf6ff3df478e9deba3e03e4e04b300f8e6a139e192c05fa3490afc7"
 
 [[package]]
 name = "atty"
@@ -380,11 +380,12 @@ dependencies = [
 
 [[package]]
 name = "intel-mkl-tool"
-version = "0.4.0"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7c7d2835b8f503ce5be543f7b1a600404f5566f1e5c263af553787d6665f135b"
+checksum = "7432a0ea8af163128eac62c5382925375aeb8399fa15b82d23581643031a1b48"
 dependencies = [
  "anyhow",
+ "log",
  "walkdir",
 ]
 
@@ -466,9 +467,9 @@ dependencies = [
 
 [[package]]
 name = "oci-spec"
-version = "0.5.7"
+version = "0.5.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aadee5baa194ca14343bdc9545470fc07c8898dc9ed5f997c5306495b2d02389"
+checksum = "98135224dd4faeb24c05a2fac911ed53ea6b09ecb09d7cada1cb79963ab2ee34"
 dependencies = [
  "derive_builder",
  "getset",
@@ -479,9 +480,9 @@ dependencies = [
 
 [[package]]
 name = "ocipkg"
-version = "0.2.3"
+version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc7c872044a3bfc44ec8a7292a0be5a63c5397dc75630b61065f118a0f1b75f2"
+checksum = "d986aaf6585d654e261afd1eb2398ff54d85693fff7fbf7df116f940d1d54381"
 dependencies = [
  "base16ct",
  "base64",
