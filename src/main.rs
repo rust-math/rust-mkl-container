@@ -1,11 +1,15 @@
 //! Create container of MKL library, found by intel-mkl-tool
 
-use anyhow::{bail, Result};
+use anyhow::{ensure, Context, Result};
 use colored::Colorize;
-use intel_mkl_tool::{Config, Library, LinkType, STATIC_EXTENSION};
+use intel_mkl_tool::{Config, Library, LinkType, Threading};
 use oci_spec::image::Platform;
 use ocipkg::{image::Builder, ImageName};
-use std::{fs, path::Path, time::Instant};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+    time::Instant,
+};
 
 const REGISTRY: &str = "ghcr.io/rust-math/rust-mkl";
 
@@ -14,6 +18,12 @@ fn main() -> Result<()> {
         .unwrap_or_else(|_| "0".to_string()) // fallback value for local testing
         .parse()?;
     for cfg in Config::possibles() {
+        if cfg.link == LinkType::Dynamic {
+            // ocipkg is designed for static linking only.
+            // Getting dynamically-link library as a dependency is bad idea.
+            continue;
+        }
+
         let lib = Library::new(cfg)?;
         let (year, _, update) = lib.version()?;
         let name = ImageName::parse(&format!(
@@ -24,7 +34,7 @@ fn main() -> Result<()> {
 
         eprintln!("{:>12} {}", "Packaging".green().bold(), name);
         let timer = Instant::now();
-        pack(cfg, &name, &output)?;
+        pack(lib, &name, &output)?;
         eprintln!(
             "{:>12} {} ({:.2}s)",
             "Created".green().bold(),
@@ -36,28 +46,25 @@ fn main() -> Result<()> {
 }
 
 /// Create oci-archive
-pub fn pack(cfg: Config, name: &ImageName, output: impl AsRef<Path>) -> Result<()> {
-    let lib = Library::new(cfg)?;
+pub fn pack(lib: Library, name: &ImageName, output: impl AsRef<Path>) -> Result<()> {
+    ensure!(lib.config.link == LinkType::Static);
 
-    let libs = cfg
-        .libs()
+    let cfg = lib.config;
+    let mut libs: Vec<PathBuf> = intel_mkl_tool::mkl_libs(cfg)
         .into_iter()
-        .chain(cfg.additional_libs().into_iter())
-        .map(|name| {
-            let path = if name == "iomp5" {
-                lib.iomp5_dir
-                    .as_ref()
-                    .unwrap()
-                    .join(as_library_filename(cfg.link, &name))
-            } else {
-                lib.library_dir.join(as_library_filename(cfg.link, &name))
-            };
-            if !path.exists() {
-                bail!("Required library not found: {}", path.display());
-            }
-            Ok(path)
+        .map(|lib_name| {
+            let file_name = intel_mkl_tool::mkl_file_name(cfg.link, &lib_name);
+            lib.library_dir.join(file_name)
         })
-        .collect::<Result<Vec<_>>>()?;
+        .collect();
+
+    if lib.config.parallel == Threading::OpenMP {
+        let iomp5 = lib
+            .iomp5_static_dir
+            .context("Static OpenMP runtime not found")?
+            .join(intel_mkl_tool::openmp_runtime_file_name(LinkType::Static));
+        libs.push(iomp5);
+    }
 
     let mut f = fs::File::create(output)?;
     let mut builder = Builder::new(&mut f);
@@ -65,21 +72,4 @@ pub fn pack(cfg: Config, name: &ImageName, output: impl AsRef<Path>) -> Result<(
     builder.set_platform(&Platform::default());
     builder.set_name(name);
     Ok(())
-}
-
-fn as_library_filename(link: LinkType, name: &str) -> String {
-    match link {
-        LinkType::Static => format!(
-            "{}{}.{}",
-            std::env::consts::DLL_PREFIX,
-            name,
-            STATIC_EXTENSION
-        ),
-        LinkType::Dynamic => format!(
-            "{}{}.{}",
-            std::env::consts::DLL_PREFIX,
-            name,
-            std::env::consts::DLL_EXTENSION
-        ),
-    }
 }
