@@ -72,6 +72,8 @@ jobs:
         env:
           MKLROOT: ${{ github.workspace }}
 
+      - run: cat $HOME/.docker/config.json
+
       # Deploy to GitHub container reigstry (ghcr.io)
       - uses: actions-rs/cargo@v1
         if: github.event_name != 'pull_request'
