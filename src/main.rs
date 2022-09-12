@@ -11,8 +11,6 @@ use std::{
     time::Instant,
 };
 
-const REGISTRY: &str = "ghcr.io/rust-math/rust-mkl";
-
 fn main() -> Result<()> {
     let run_id: u64 = std::env::var("GITHUB_RUN_ID")
         .unwrap_or_else(|_| "0".to_string()) // fallback value for local testing
@@ -27,8 +25,12 @@ fn main() -> Result<()> {
         let lib = Library::new(cfg)?;
         let (year, _, update) = lib.version()?;
         let name = ImageName::parse(&format!(
-            "{}/{}:{}.{}-{}",
-            REGISTRY, cfg, year, update, run_id
+            "ghcr.io/rust-math/rust-mkl/{}/{}:{}.{}-{}",
+            std::env::consts::OS,
+            cfg,
+            year,
+            update,
+            run_id
         ))?;
         let output = format!("{}.tar", cfg);
 
