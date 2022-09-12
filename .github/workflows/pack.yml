@@ -15,14 +15,14 @@ jobs:
   linux:
     runs-on: ubuntu-22.04
     container:
-      image: rust:1.62.1
+      image: rust:1.63.0
     steps:
       - uses: actions/checkout@v1
 
       - uses: actions-rs/cargo@v1
         with:
           command: install
-          args: ocipkg-cli --version=0.2.3
+          args: ocipkg-cli --version=~0.2
       - name: Add path
         run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
