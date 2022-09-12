@@ -19,11 +19,27 @@ jobs:
     steps:
       - uses: actions/checkout@v1
 
-      - uses: actions-rs/cargo@v1
+      # Create oci-archive
+      - name: Install Intel MKL
+        run: |
+          apt update
+          apt install -y cpio
+          ./install-mkl.sh
+      - name: Create oci-archive using intel-mkl-pack
+        uses: actions-rs/cargo@v1
+        with:
+          command: run
+          args: --release
+
+      # Deploy to GitHub container reigstry (ghcr.io)
+      - name: Install ocipkg-cli
+        if: github.event_name != 'pull_request'
+        uses: actions-rs/cargo@v1
         with:
           command: install
           args: ocipkg-cli --version=~0.2
       - name: Add path
+        if: github.event_name != 'pull_request'
         run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
       - name: Login to GitHub Container Registry
@@ -31,21 +47,49 @@ jobs:
         run: |
           ocipkg login -u ${{ github.repository_owner }} -p ${{ github.token }} https://ghcr.io
 
-      - name: Install Intel MKL
+      - name: Push oci-archives
+        if: github.event_name != 'pull_request'
         run: |
-          apt update
-          apt install -y cpio
-          ./install-mkl.sh
+          ocipkg push mkl-static-lp64-seq.tar
+          ocipkg push mkl-static-lp64-iomp.tar
+          ocipkg push mkl-static-ilp64-seq.tar
+          ocipkg push mkl-static-ilp64-iomp.tar
 
-      - name: Create oci-archive using intel-mkl-pack
-        uses: actions-rs/cargo@v1
+  windows:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v1
+
+      # Create oci-archive
+      - name: Get MKL using NuGet
+        run: |
+          nuget install intelmkl.devel.cluster.win-x64  -Version 2022.0.3.171
+          nuget install intelmkl.static.cluster.win-x64 -Version 2022.0.3.171
+      - uses: actions-rs/cargo@v1
         with:
           command: run
           args: --release
+        env:
+          MKLROOT: ${{ github.workspace }}
 
+      # Deploy to GitHub container reigstry (ghcr.io)
+      - uses: actions-rs/cargo@v1
+        if: github.event_name != 'pull_request'
+        name: Install ocipkg-cli
+        with:
+          command: install
+          args: ocipkg-cli --version=~0.2
+      - name: Add path
+        if: github.event_name != 'pull_request'
+        run: echo "$HOME/.cargo/bin" >> $Env:GITHUB_PATH
+      - name: Login to GitHub Container Registry
+        if: github.event_name != 'pull_request'
+        run: |
+          ocipkg login -u ${{ github.repository_owner }} -p ${{ github.token }} https://ghcr.io
       - name: Push oci-archives
         if: github.event_name != 'pull_request'
-        run: >-
-          for ar in $(find . -name "mkl-*-*-*.tar"); do
-            ocipkg push $ar;
-          done
+        run: |
+          ocipkg push mkl-static-lp64-seq.tar
+          ocipkg push mkl-static-lp64-iomp.tar
+          ocipkg push mkl-static-ilp64-seq.tar
+          ocipkg push mkl-static-ilp64-iomp.tar
