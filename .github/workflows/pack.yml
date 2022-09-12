@@ -33,18 +33,22 @@ jobs:
 
       # Deploy to GitHub container reigstry (ghcr.io)
       - name: Install ocipkg-cli
+        if: github.event_name != 'pull_request'
         uses: actions-rs/cargo@v1
         with:
           command: install
           args: ocipkg-cli --version=~0.2
       - name: Add path
+        if: github.event_name != 'pull_request'
         run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
       - name: Login to GitHub Container Registry
+        if: github.event_name != 'pull_request'
         run: |
           ocipkg login -u ${{ github.repository_owner }} -p ${{ github.token }} https://ghcr.io
 
       - name: Push oci-archives
+        if: github.event_name != 'pull_request'
         run: |
           ocipkg push mkl-static-lp64-seq.tar
           ocipkg push mkl-static-lp64-iomp.tar
@@ -70,16 +74,20 @@ jobs:
 
       # Deploy to GitHub container reigstry (ghcr.io)
       - uses: actions-rs/cargo@v1
+        if: github.event_name != 'pull_request'
         name: Install ocipkg-cli
         with:
           command: install
           args: ocipkg-cli --version=~0.2
       - name: Add path
+        if: github.event_name != 'pull_request'
         run: echo "$HOME/.cargo/bin" >> $Env:GITHUB_PATH
       - name: Login to GitHub Container Registry
+        if: github.event_name != 'pull_request'
         run: |
           ocipkg login -u ${{ github.repository_owner }} -p ${{ github.token }} https://ghcr.io
       - name: Push oci-archives
+        if: github.event_name != 'pull_request'
         run: |
           ocipkg push mkl-static-lp64-seq.tar
           ocipkg push mkl-static-lp64-iomp.tar
