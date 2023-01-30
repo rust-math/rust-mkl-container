@@ -1,4 +1,4 @@
-FROM rust:1.66.0
+FROM rust:1.67.0
 
 # Setup Intel-MKL
 WORKDIR /mkl
